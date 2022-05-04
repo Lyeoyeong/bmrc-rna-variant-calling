@@ -1,0 +1,82 @@
+Copy this folder to the working directory for your projec 
+
+1. Preparation
+1.1 cromwell configuration file preparation
+Edited from github template - 
+Delete project_name 
+Set queue_name
+Add webservide at the end:
+webservice {
+  port = 9000
+  interface = 0.0.0.0
+
+Can directly use:
+/bmrc/conf/cromwell.bmrc.conf
+
+1.2. wdl file perparation
+Edit wdl file for single-end sequencing file
+Now have two wdl pipeline in:
+/bmrc/pipeline/
+main.paired_end.wdl for paired end
+main.single_end.wdl for single end
+
+2. Edit input template
+Add path to references, path to inputs, path to outputs and save the template file to bmrc folder.
+Adding path to references has already been done:
+sed -i 's#/path/to/references/#/gpfs3/well/kir/mirror/genomes/gatk/#g' input.template.bmrc.json
+Replace your current path with path to inputs or outputs on /bmrc/conf/input.template.json:
+cd /bmrc/conf
+sed -i 's#/path/to/inputs/#/your/current/path/#g' input.template.json
+sed -i 's#/path/to/outputs/#/your/current/path/#g' input.template.json
+Executable example:/bmrc/example/input.template.example.json
+
+3. Generating input json file:
+create samples.ids file for sample ids
+samples.ids example: /bmrc/example/sample.ids.example
+Run command:
+/generate.input.json.sh samples.ids INPUTs
+
+4. Preparing TSV file for each sample in TSVs folder
+Sample configuration TSV file configuration is needed
+Sample ID should be used to name the file, e.g. Sample_A.tsv
+for single-end, just directly delete Read2 column
+TSV file having one sequenced sample per row:
+(don't include header row)
+Read1
+Read2
+Project Number
+Sample Name
+Library Name
+Read Group Name
+Sequencing Center
+Platform
+Platform Model
+Platform Unit
+Run Date
+
+Example for TSV file could see:/bmrc/example/TSVs
+
+5. Running variant calling jobs per sample:
+(choose your pipeline, single-end or paired-end)
+run.variant.calling.sh samples.ids
+Executable example: /bmrc/example/run.variant.calling.sh
+
+6. Running joint genotyping for a group of individuals
+The vcf file generated in step 5 is gvcfs, so we should first use gatk CombineGVCFs to combine these GVCFs -> perform genotyping with GenotypeGVCFs to generate vcf files -> VariantFiltration to filter snps
+Prepare a joint_genotype folder as an output folder
+
+Make VCF files list for each group
+Executable example: /bmrc/example/joint_genotyping/gvcf_list
+
+Prepare Joint Genotyping submission file, each column is:
+Group prefix: prefix to use for the resulting joint genotyping VCF file.
+Reference genome: path to the genome reference FastA file.
+dbSNP: path to the reference dbSNP VCF file.
+Output path: path where to store the merged VCF files.
+VCF files list: path to a file listing all available gVCF files (one per line, using absolute paths).
+Samples list: comma separated list of the Sample IDs to perform the joint genotyping on.
+
+Example for this see: /bmrc/example/joint_genotyping/samples.joint_genotyping.list
+Then run: /bmrc/joint_genotyping/joint_genotyping.sh
+(submit_jobs.joint_genotyping.sh is also in the joint_genotyping folder)
+

@@ -1,0 +1,5 @@
+{
+    "final_workflow_log_dir": "/path/to/LOGs/cromwell-workflow",
+    "final_call_logs_dir": "/path/to/LOGs/cromwell-call"
+}
+
